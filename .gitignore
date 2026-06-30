@@ -1,0 +1,15 @@
+# generované výstupy
+penumbra.png
+nahled_*.png
+mockup_*.png
+
+# cache (TLE družic, aurora, živé mraky)
+.cache/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

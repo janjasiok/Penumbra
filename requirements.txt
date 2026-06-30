@@ -1,0 +1,5 @@
+# Penumbra – závislosti
+Pillow>=10.0          # vykreslování obrázku
+numpy>=1.24           # výpočty mapy, masky, textury
+sgp4>=2.23            # dráhy družic (ISS, Hubble, Tiangong) – volitelné
+tzdata; platform_system == "Windows"   # časové zóny (letní/zimní čas) na Windows
