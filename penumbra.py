@@ -84,7 +84,7 @@ CLOUDS       = True            # mraky na denní straně
 TEX_CLOUDS   = "earth_clouds.jpg"
 CLOUD_OPACITY = 0.85           # krytí mraků (0–1)
 CLOUD_DRIFT  = 6.0             # pomalé otáčení mraků (°/h) – posouvají se i mezi aktualizacemi
-CLOUDS_LIVE_URL = ""           # nepovinné: URL na živou mapu mraků (equirekt. 2:1). Prázdné = statická. Viz POZNAMKY.md
+CLOUDS_LIVE_URL = ""           # nepovinné: URL na živou mapu mraků (equirekt. 2:1). Prázdné = statická. Příklad viz fetch_live_clouds()
 CLOUDS_LIVE_HOURS = 3          # interval stahování živé mapy (h)
 
 # --- ČASOVÁ PÁSMA -----------------------------------------------------------
@@ -137,7 +137,7 @@ C_OCEAN  = (20, 58, 82)
 C_LAND   = (63, 125, 84)
 C_GOLD   = (255, 224, 138)
 
-# TODO (živá data mraků): NASA GIBS – viz CLOUDS_LIVE_URL a POZNAMKY.md
+# TODO (živá data mraků): NASA GIBS – viz CLOUDS_LIVE_URL a docstring fetch_live_clouds()
 # Textury: Solar System Scope (CC BY 4.0; podklady NASA). Pásma a pevniny: Natural Earth.
 
 OUTPUT = os.path.join(BASE, "penumbra.png")
@@ -1063,10 +1063,10 @@ if __name__ == "__main__":
 # AUTOMATICKÉ OBNOVOVÁNÍ
 #
 # WINDOWS (Plánovač úloh):
-#   Spustit program: pythonw.exe   Argument: "C:\cesta\daynight_wallpaper.py"
+#   Spustit program: pythonw.exe   Argument: "C:\cesta\penumbra.py"
 #   Spustit v: "C:\cesta"          Spouštěč: opakovat každých 10 minut
 #
 # macOS (cron):  crontab -e  a přidej řádek:
-#   */10 * * * * /usr/bin/python3 /Users/ty/cesta/daynight_wallpaper.py
+#   */10 * * * * /usr/bin/python3 /Users/ty/cesta/penumbra.py
 #   (na Macu doporučuju nastavit SCREEN ručně na rozlišení displeje)
 # ------------------------------------------------------------
