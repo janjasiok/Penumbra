@@ -76,8 +76,8 @@ SHOW_STARS       = True        # hvězdy v okrajích (jen v režimu "contain")
 
 # --- VZHLED ZEMĚ ------------------------------------------------------------
 USE_TEXTURE = True             # True = satelitní textura + světla měst; False = ploché barvy (z land.json)
-NIGHT_BRIGHTNESS = 0.18        # jas noční strany (víc = líp vidět mapu; 0.05 ≈ skoro černá)
-LIGHTS_GAIN = 1.35             # jas městských světel na temné straně
+NIGHT_BRIGHTNESS = 0.26        # jas noční strany (víc = líp vidět mapu; 0.05 ≈ skoro černá)
+LIGHTS_GAIN = 1.75             # jas městských světel na temné straně
 SUPERSAMPLE = 2                # antialiasing/kvalita: 2 = hladší (pomalejší), 1 = rychlejší
 TEX_DAY     = "earth_day.jpg"  # denní textura 8K (equirekt., 2:1, střed 0°)
 TEX_NIGHT   = "earth_night.jpg"# noční světla měst 8K
