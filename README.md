@@ -16,7 +16,7 @@ Vzhled laděný do palety NASA (písma Inter + DM Mono).
 - **Mraky** (statická textura, volitelně živá z NASA GIBS)
 - **Časová pásma** ze skutečných hranic (Natural Earth) + zvýraznění pásma města
 - **Vystředění na libovolné město** (výchozí Ostrava) + maják s názvem a UTC posunem
-- **Slunce a Měsíc** — subsolární/sublunární bod, přerušované dráhy, Měsíc se skutečným povrchem a fází
+- **Slunce a Měsíc se skutečným povrchem** — subsolární/sublunární bod, přerušované dráhy, fáze Měsíce
 - **Polární záře** na noční straně z modelu NOAA OVATION (volitelné)
 - **Družice** (ISS, Hubble, Tiangong) — pozemní stopa, terčík, výška a rychlost
 - Jemné **vržené stíny** pod popisky, dráhami i značkami; NASA paleta a fonty
