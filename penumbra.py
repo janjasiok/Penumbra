@@ -1073,11 +1073,11 @@ def build_wallpaper(when=None):
     try:
         import datetime as dt_module
         now_str = dt_module.datetime.now().strftime("Aktualizováno: %d.%m.%Y %H:%M:%S")
-        time_font = load_font(size=max(12, int(sh * 0.012)), mono=True)
+        time_font = load_font(size=max(16, int(sh * 0.020)), mono=True)
         cd = ImageDraw.Draw(canvas, "RGBA")
         bbox = cd.textbbox((0,0), now_str, font=time_font)
         tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        x_pos, y_pos = sw - tw - 40, sh - th - 40
+        x_pos, y_pos = sw - tw - 200, sh - th - 100
         cd.text((x_pos + 2, y_pos + 2), now_str, font=time_font, fill=(0, 0, 0, 180))
         cd.text((x_pos, y_pos), now_str, font=time_font, fill=(180, 190, 210, 200))
     except Exception:
