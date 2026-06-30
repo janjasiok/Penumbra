@@ -65,6 +65,9 @@ CITIES = {
 SCREEN = None                  # None = auto-detekce rozlišení; jinak (šířka, výška), např. (2560, 1440)
 MAP_FILL = "cover"             # "cover" = přes celou plochu (ořízne kraje) | "contain" = celá mapa + okraje s hvězdami
 
+# --- ZAMYKACÍ / PŘIHLAŠOVACÍ OBRAZOVKA (Windows) ----------------------------
+SET_LOCKSCREEN = True          # nastavit render i jako zamykací (a tím i přihlašovací) obrazovku; vyžaduje admin práva
+
 # --- CO SE KRESLÍ -----------------------------------------------------------
 SHOW_GRID        = True        # zeměpisná síť (rovnoběžky; rovné poledníky jen bez dat pásem)
 SHOW_CITY_MARKER = True        # tečka + název vystředěného města + zlatý poledník
@@ -1050,12 +1053,53 @@ def set_wallpaper(path):
     return False
 
 # ============================================================
+#  ZAMYKACÍ / PŘIHLAŠOVACÍ OBRAZOVKA (Windows, vyžaduje admin)
+# ============================================================
+def set_lockscreen(path):
+    """Nastaví obrázek zamykací (a tím i přihlašovací) obrazovky přes PersonalizationCSP.
+    Zapisuje do HKLM → vyžaduje administrátorská práva. Windows obrázek kešují, proto
+    střídáme dva soubory a měníme cestu — to vynutí znovunačtení při každém renderu."""
+    if not sys.platform.startswith("win"):
+        return False
+    try:
+        import winreg, shutil
+        keypath = r"SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP"
+        cur = ""                                              # aktuálně nastavená cesta (ať zapíšeme do druhého souboru)
+        try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, keypath) as k:
+                cur, _ = winreg.QueryValueEx(k, "LockScreenImagePath")
+        except Exception:
+            pass
+        a = os.path.join(BASE, "penumbra_lock_a.png")
+        b = os.path.join(BASE, "penumbra_lock_b.png")
+        target = b if os.path.abspath(cur) == os.path.abspath(a) else a   # přepni na ten druhý
+        other  = a if target == b else b
+        shutil.copyfile(path, target)
+        with winreg.CreateKey(winreg.HKEY_LOCAL_MACHINE, keypath) as k:
+            winreg.SetValueEx(k, "LockScreenImageStatus", 0, winreg.REG_DWORD, 1)
+            winreg.SetValueEx(k, "LockScreenImagePath", 0, winreg.REG_SZ, target)
+            winreg.SetValueEx(k, "LockScreenImageUrl",  0, winreg.REG_SZ, target)
+        try:
+            if os.path.exists(other):
+                os.remove(other)                              # uklid starý soubor
+        except Exception:
+            pass
+        return True
+    except PermissionError:
+        return False
+    except Exception:
+        return False
+
+# ============================================================
 if __name__ == "__main__":
     path, center, (decl, slon) = build_wallpaper()
     print("Mapa vykreslena: %s" % path)
     print("Střed: %s (%.2f°)   Slunce v zenitu: %.1f°, %.1f°" % (CITY, center, decl, slon))
     if sys.platform.startswith("win") or sys.platform == "darwin":
         print("Tapeta nastavena." if set_wallpaper(path) else "Tapetu se nepodařilo nastavit.")
+        if SET_LOCKSCREEN and sys.platform.startswith("win"):
+            print("Zamykací obrazovka nastavena." if set_lockscreen(path)
+                  else "Zamykací obrazovku se nepodařilo nastavit (chybí admin práva?).")
     else:
         print("(Tapetu umím nastavit jen na Windows/macOS — PNG je každopádně hotové.)")
 
