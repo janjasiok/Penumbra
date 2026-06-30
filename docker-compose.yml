@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  penumbra:
+    build: .
+    image: penumbra-wallpaper
+    # Namapujeme aktuální adresář, aby se vygenerovaný obrázek penumbra.png
+    # a složka .cache uložily přímo k nám na hostitelský systém
+    volumes:
+      - ./:/app
