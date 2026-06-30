@@ -990,7 +990,10 @@ def build_wallpaper(when=None):
             isf = load_font(max(12, map_w // 125))
             aff = load_font(max(10, map_w // 155), mono=True)
             mr = max(9, map_w // 175)
-            placed = []                                           # už umístěné popisky (kvůli překryvu)
+            mb = int(mr * 2.0)                                   # ochranná zóna kolem terčíku družice
+            # terčíky všech družic jsou pro popisky překážky (text nesmí zasahovat do cizí značky)
+            placed = [[sx(c[1]) - mb, sy(c[0]) - mb, sx(c[1]) + mb, sy(c[0]) + mb]
+                      for _, _, _, c in sats if c]
             vtop = ((map_h - sh) // 2) if cover else 0            # svislé meze viditelné oblasti
             vbot = vtop + (sh if cover else map_h)
             def _overlap(a, b):
