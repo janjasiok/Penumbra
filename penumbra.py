@@ -285,7 +285,8 @@ def _marker_reticle(color, r):
     return im.resize((sz, sz), Image.LANCZOS), pad
 
 def _marker_sun(r):
-    """Zářící Slunce – měkký radiální svit, který plynule vyhasne (bez ostrých hran)."""
+    """Zářící Slunce – měkká koróna (pro tmavou stranu) + sytý kotouč s jantarovým lemem
+    (drží kontrast i na světlém podkladu, kde subsolární bod vždy leží)."""
     SS = 4
     pad = int(r * 5.0)
     sz = pad * 2
@@ -296,9 +297,17 @@ def _marker_sun(r):
     for rr in range(gr, 0, -1):
         t = rr / gr                                          # 1 na okraji, 0 ve středu
         d.ellipse([c - rr, c - rr, c + rr, c + rr], fill=(255, 239, 208, int(150 * (1 - t) ** 2.8)))
-    dr = int(r * 0.9 * SS)                                   # jemné jasné jádro
-    d.ellipse([c - dr, c - dr, c + dr, c + dr], fill=(255, 250, 238, 255))
-    im = im.filter(ImageFilter.GaussianBlur(r * SS * 0.35))  # výrazné změkčení – žádné hrany
+    im = im.filter(ImageFilter.GaussianBlur(r * SS * 0.35))  # změkčit jen korónu (žádné hrany)
+    d = ImageDraw.Draw(im)
+    disk = int(r * 1.15 * SS)                               # sytý kotouč s plynulým přechodem (jádro → okraj)
+    core = (255, 250, 238)                                  # jasné jádro
+    edge = (255, 176, 48)                                   # jantarový okraj
+    for rr in range(disk, 0, -1):
+        t = rr / disk                                       # 1 na okraji, 0 ve středu
+        col = tuple(int(core[i] + (edge[i] - core[i]) * t) for i in range(3))
+        d.ellipse([c - rr, c - rr, c + rr, c + rr], fill=col + (255,))
+    d.ellipse([c - disk, c - disk, c + disk, c + disk], outline=(206, 112, 24, 255),
+              width=max(SS, int(0.22 * r * SS)))             # tmavý jantarový lem pro kontrast i na světlém
     return im.resize((sz, sz), Image.LANCZOS), pad
 
 def _marker_moon(r, frac, waxing):
@@ -716,18 +725,34 @@ def build_wallpaper(when=None):
                 ImageFilter.GaussianBlur(max(1, map_w // 500)))   # měkká záře
             mapimg = Image.alpha_composite(mapimg, ov_img)
 
-    # jemné podbarvení časového pásma vystředěného města
+    # zvýraznění časového pásma vystředěného města — podbarvení + jasný obrys
     if real_tz and HIGHLIGHT_CITY_ZONE and SHOW_CITY_MARKER:
         czone = offset_at(center, city_lat if city_lat is not None else 0.0, tz)
         if czone is not None:
-            fillov = Image.new("RGBA", (map_w, map_h), (0, 0, 0, 0))
+            S = 2 if map_w <= 3000 else 1                 # supersampling kvůli hladkému obrysu
+            fillov = Image.new("RGBA", (map_w * S, map_h * S), (0, 0, 0, 0))
             fd = ImageDraw.Draw(fillov)
-            for z, rings in tz:                       # výplň ve „středu 0°", pak se odroluje jako mapa
+            ocol = NASA_LBLUE + (150,)                 # jemný obrys hranice pásma
+            ow = max(S, int(map_w * S / 1100))
+            for z, rings in tz:                       # výplň + obrys ve „středu 0°", pak se odroluje jako mapa
                 if abs(z - czone) > 1e-6:
                     continue
                 for ring in rings:
-                    pts = [((p[0] + 180) / 360 * map_w, (90 - p[1]) / 180 * map_h) for p in ring]
-                    fd.polygon(pts, fill=NASA_BLUE + (46,))   # NASA modrá, jemný nádech
+                    pts = [((p[0] + 180) / 360 * map_w * S, (90 - p[1]) / 180 * map_h * S) for p in ring]
+                    fd.polygon(pts, fill=NASA_BLUE + (55,))   # NASA modrá, podbarvení
+                    seg = pts[:1]                             # obrys jen mezi body bez přeskoku švu
+                    for k in range(1, len(pts)):
+                        if abs(pts[k][0] - pts[k - 1][0]) > map_w * S * 0.5:
+                            if len(seg) > 1:
+                                fd.line(seg, fill=ocol, width=ow, joint="curve")
+                            seg = [pts[k]]
+                        else:
+                            seg.append(pts[k])
+                    if len(seg) > 1:
+                        fd.line(seg, fill=ocol, width=ow, joint="curve")
+            if S != 1:
+                fillov = fillov.resize((map_w, map_h), Image.LANCZOS)
+            fillov = fillov.filter(ImageFilter.GaussianBlur(max(1.0, map_w / 1400.0)))  # měkké zjemnění hran
             fa = np.roll(np.asarray(fillov), roll_px, axis=1)
             mapimg = Image.alpha_composite(mapimg, Image.fromarray(fa, "RGBA"))
 
