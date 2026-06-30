@@ -960,6 +960,11 @@ def build_wallpaper(when=None):
             isf = load_font(max(12, map_w // 125))
             aff = load_font(max(10, map_w // 155), mono=True)
             mr = max(9, map_w // 175)
+            placed = []                                           # už umístěné popisky (kvůli překryvu)
+            vtop = ((map_h - sh) // 2) if cover else 0            # svislé meze viditelné oblasti
+            vbot = vtop + (sh if cover else map_h)
+            def _overlap(a, b):
+                return not (a[2] <= b[0] or b[2] <= a[0] or a[3] <= b[1] or b[3] <= a[1])
             for label, color, track, cur in sats:                 # terčíky + popisky (název / výška / rychlost)
                 if not cur:
                     continue
@@ -983,7 +988,24 @@ def build_wallpaper(when=None):
                 else:
                     tx = ix - pad - 4 - wlab                      # nevejde se → vlevo od značky
                 tx = min(max(tx, llim + 4), rlim - 4 - wlab)
-                y = iy - sum(f.size for _, f, _ in lines) // 2    # blok vystředěný na značku
+                bh = sum(f.size for _, f, _ in lines)             # výška bloku popisku
+                y0 = iy - bh // 2                                 # výchozí poloha: vystředěná na značku
+                step = max(2, isf.size // 4)
+                def _box(yy):
+                    return [tx - 2, yy - 2, tx + wlab + 2, yy + bh + 2]
+                y = y0
+                for _ in range(400):                             # posuň dolů, dokud se nepřekrývá
+                    if not any(_overlap(_box(y), pb) for pb in placed):
+                        break
+                    y += step
+                if _box(y)[3] > vbot or any(_overlap(_box(y), pb) for pb in placed):
+                    y = y0                                        # dolů to nešlo → zkus nahoru od původní
+                    for _ in range(400):
+                        if not any(_overlap(_box(y), pb) for pb in placed):
+                            break
+                        y -= step
+                y = min(max(y, vtop + 2), vbot - bh - 2)          # udrž blok ve viditelné oblasti
+                placed.append(_box(y))
                 for t, f, fill in lines:
                     _text(md, mapimg, (tx, y), t, f, fill)
                     y += f.size
