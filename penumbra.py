@@ -105,8 +105,10 @@ VIGNETTE_SIZE     = 0.04        # výška ztmaveného pruhu na každém okraji (
 # --- DRUŽICE (ISS, Hubble, Tiangong…) ---------------------------------------
 SHOW_SATELLITES = True         # dráhy + aktuální polohy družic; vyžaduje internet + knihovnu sgp4
 SHOW_ISS_FOOTPRINT = False     # kružnice dosahu ISS (oblast, odkud je nad obzorem)
-SAT_TRACK_MIN_BEFORE = 45      # minut dráhy dozadu
-SAT_TRACK_MIN_AFTER  = 90      # minut dráhy dopředu
+SAT_TRACK_MIN_BEFORE = 100     # minut dráhy dozadu
+SAT_TRACK_MIN_AFTER  = 100     # minut dráhy dopředu
+# 100+100 ≈ oběh na každou stranu: úsek u družice tak sahá od levého k pravému okraji jako jedna
+# souvislá čára; zbytek (zabalený přes datovou hranici) se zahodí (kreslí se jen úsek u družice)
 # seznam družic:  (popisek, NORAD katalogové číslo, barva RGB)
 SATELLITES = [
     ("ISS",      25544, (252, 61, 33)),    # NASA červená
@@ -1037,13 +1039,21 @@ def build_wallpaper(when=None):
             for label, color, track, cur in sats:                 # každá dráha svou barvou
                 col = color + (235,)
                 pts = [(sx(lo), sy(la)) for (la, lo) in track]
+                segs = []                                         # rozděl dráhu na úseky podle švu (datová hranice)
                 seg = pts[:1]
                 for k in range(1, len(pts)):
-                    if abs(pts[k][0] - pts[k - 1][0]) > map_w * 0.5:     # přeskoč šev na okraji
-                        _flush(seg, col); seg = [pts[k]]
+                    if abs(pts[k][0] - pts[k - 1][0]) > map_w * 0.5:
+                        segs.append(seg); seg = [pts[k]]
                     else:
                         seg.append(pts[k])
-                _flush(seg, col)
+                segs.append(seg)
+                if cur:                                           # jen úsek u družice — ať se dráha neukáže na druhé straně
+                    cxp, cyp = sx(cur[1]), sy(cur[0])
+                    best = min(segs, key=lambda s: min((px - cxp) ** 2 + (py - cyp) ** 2 for px, py in s))
+                    _flush(best, col)
+                else:
+                    for s in segs:
+                        _flush(s, col)
 
             tracks_img = big.resize((map_w, map_h), Image.LANCZOS)
             tsh = Image.new("RGBA", tracks_img.size, (0, 0, 0, 0))    # měkký stín pod dráhy
