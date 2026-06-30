@@ -16,7 +16,7 @@ Vzhled laděný do palety NASA (písma Inter + DM Mono).
 - **Mraky** (statická textura, volitelně živá z NASA GIBS)
 - **Časová pásma** ze skutečných hranic (Natural Earth) + zvýraznění pásma města
 - **Vystředění na libovolné město** (výchozí Ostrava) + maják s názvem a UTC posunem
-- **Slunce a Měsíc** — subsolární/sublunární bod, přerušované dráhy, fáze Měsíce
+- **Slunce a Měsíc** — subsolární/sublunární bod, přerušované dráhy, Měsíc se skutečným povrchem a fází
 - **Polární záře** na noční straně z modelu NOAA OVATION (volitelné)
 - **Družice** (ISS, Hubble, Tiangong) — pozemní stopa, terčík, výška a rychlost
 - Jemné **vržené stíny** pod popisky, dráhami i značkami; NASA paleta a fonty
@@ -89,7 +89,7 @@ Runtime cache (TLE, aurora, živé mraky) se ukládá do `.cache/` (gitignored).
 
 ## Assety a licence
 
-- **Textury Země** — [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0; podklady NASA)
+- **Textury Země a Měsíce** — [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0; podklady NASA)
 - **Písma** — [Inter](https://rsms.me/inter/) a [DM Mono](https://fonts.google.com/specimen/DM+Mono) (SIL Open Font License). Inter a DM Mono jsou písma z NASA Horizon Design System.
 - **Hranice pásem a pevnin** — [Natural Earth](https://www.naturalearthdata.com/) (public domain)
 - **Dráhy družic (TLE)** — [CelesTrak](https://celestrak.org/) (T. S. Kelso)
