@@ -887,7 +887,8 @@ def build_wallpaper(when=None):
     if SHOW_MOON:
         mlat, mlon = _moon_subpoint(now)
         frac, waxing = _moon_phase(now)
-        moon, mpad = _marker_moon(max(9, map_w // 195), frac, waxing)
+        # Měsíc stejně velký jako Slunce (jako na obloze ~0,5°): kotouč Slunce je 1.15×, Měsíce 1.0×
+        moon, mpad = _marker_moon(round(max(10, map_w // 175) * 1.15), frac, waxing)
         mx, my = sx(mlon), sy(mlat)
         mapimg.alpha_composite(moon, (int(mx - mpad), int(my - mpad)))
 
