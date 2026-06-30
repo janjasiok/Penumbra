@@ -134,6 +134,11 @@ FONT_MONO = "DMMono-Medium.ttf"  # čísla – DM Mono (technické/číselné re
 NASA_BLUE  = (11, 61, 145)     # #0B3D91
 NASA_RED   = (252, 61, 33)     # #FC3D21
 NASA_LBLUE = (150, 178, 235)   # světlejší modrá pro tenké linky (čitelná na tmavém)
+# zvýraznění časového pásma vystředěného města (laditelné — ať nesplývá s oceánem)
+ZONE_FILL = (8, 30, 82)        # tmavě modré podbarvení pásma (ztlumí oblast)
+ZONE_EDGE = (180, 210, 255)    # světlý obrys pásma (nese hranici)
+ZONE_FILL_ALPHA = 70           # krytí výplně (0–255)
+ZONE_EDGE_ALPHA = 210          # krytí obrysu (0–255; víc = výraznější okraj)
 # barvy podkladu (záloha, když nejsou textury)
 C_SPACE  = (5, 7, 15)
 C_OCEAN  = (20, 58, 82)
@@ -732,14 +737,14 @@ def build_wallpaper(when=None):
             S = 2 if map_w <= 3000 else 1                 # supersampling kvůli hladkému obrysu
             fillov = Image.new("RGBA", (map_w * S, map_h * S), (0, 0, 0, 0))
             fd = ImageDraw.Draw(fillov)
-            ocol = NASA_LBLUE + (150,)                 # jemný obrys hranice pásma
+            ocol = tuple(ZONE_EDGE) + (ZONE_EDGE_ALPHA,)   # obrys hranice pásma
             ow = max(S, int(map_w * S / 1100))
             for z, rings in tz:                       # výplň + obrys ve „středu 0°", pak se odroluje jako mapa
                 if abs(z - czone) > 1e-6:
                     continue
                 for ring in rings:
                     pts = [((p[0] + 180) / 360 * map_w * S, (90 - p[1]) / 180 * map_h * S) for p in ring]
-                    fd.polygon(pts, fill=NASA_BLUE + (55,))   # NASA modrá, podbarvení
+                    fd.polygon(pts, fill=tuple(ZONE_FILL) + (ZONE_FILL_ALPHA,))   # podbarvení pásma
                     seg = pts[:1]                             # obrys jen mezi body bez přeskoku švu
                     for k in range(1, len(pts)):
                         if abs(pts[k][0] - pts[k - 1][0]) > map_w * S * 0.5:
