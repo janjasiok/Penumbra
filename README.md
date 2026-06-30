@@ -89,7 +89,7 @@ Runtime cache (TLE, aurora, živé mraky) se ukládá do `.cache/` (gitignored).
 
 ## Assety a licence
 
-- **Textury Země a Měsíce** — [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0; podklady NASA)
+- **Textury Země, Měsíce a Slunce** — [Solar System Scope](https://www.solarsystemscope.com/textures/) (CC BY 4.0; podklady NASA)
 - **Písma** — [Inter](https://rsms.me/inter/) a [DM Mono](https://fonts.google.com/specimen/DM+Mono) (SIL Open Font License). Inter a DM Mono jsou písma z NASA Horizon Design System.
 - **Hranice pásem a pevnin** — [Natural Earth](https://www.naturalearthdata.com/) (public domain)
 - **Dráhy družic (TLE)** — [CelesTrak](https://celestrak.org/) (T. S. Kelso)

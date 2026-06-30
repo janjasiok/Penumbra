@@ -120,6 +120,7 @@ SHOW_MOON      = True          # Měsíc: sublunární bod + fáze
 SHOW_MOON_PATH = True          # dráha sublunárního bodu (kudy prochází Měsíc)
 PATH_HOURS     = 12            # délka drah dozadu i dopředu (h); 12 = celý den
 TEX_MOON       = "moon.jpg"    # textura povrchu Měsíce (equirekt. 2:1); chybí-li, kreslí se plochá šedá placka
+TEX_SUN        = "sun.jpg"     # textura fotosféry Slunce (equirekt. 2:1); chybí-li, kreslí se zlatý kotouč
 
 # --- POLÁRNÍ ZÁŘE (aurora) --------------------------------------------------
 SHOW_AURORA  = False           # auroral oval na noční straně (živá data NOAA OVATION; vyžaduje internet)
@@ -290,9 +291,20 @@ def _marker_reticle(color, r):
     d.ellipse([c - cr, c - cr, c + cr, c + cr], fill=(255, 255, 255, 255))
     return im.resize((sz, sz), Image.LANCZOS), pad
 
+_SUNTEX = False     # False = nenačteno, None = není k dispozici, jinak np.float32 pole
+def _sun_texture():
+    global _SUNTEX
+    if _SUNTEX is False:
+        try:
+            im = Image.open(_asset("textures", TEX_SUN)).convert("RGB")
+            _SUNTEX = np.asarray(im, dtype=np.float32)
+        except Exception:
+            _SUNTEX = None
+    return _SUNTEX
+
 def _marker_sun(r):
-    """Zářící Slunce – měkká koróna (pro tmavou stranu) + sytý kotouč s jantarovým lemem
-    (drží kontrast i na světlém podkladu, kde subsolární bod vždy leží)."""
+    """Zářící Slunce – měkká koróna (pro tmavou stranu) + kotouč fotosféry ze skutečné
+    textury se ztmaveným okrajem (limb darkening). Bez textury kreslí zlatý kotouč s lemem."""
     SS = 4
     pad = int(r * 5.0)
     sz = pad * 2
@@ -304,16 +316,39 @@ def _marker_sun(r):
         t = rr / gr                                          # 1 na okraji, 0 ve středu
         d.ellipse([c - rr, c - rr, c + rr, c + rr], fill=(255, 239, 208, int(150 * (1 - t) ** 2.8)))
     im = im.filter(ImageFilter.GaussianBlur(r * SS * 0.35))  # změkčit jen korónu (žádné hrany)
-    d = ImageDraw.Draw(im)
-    disk = int(r * 1.15 * SS)                               # sytý kotouč s plynulým přechodem (jádro → okraj)
-    core = (255, 250, 238)                                  # jasné jádro
-    edge = (255, 176, 48)                                   # jantarový okraj
-    for rr in range(disk, 0, -1):
-        t = rr / disk                                       # 1 na okraji, 0 ve středu
-        col = tuple(int(core[i] + (edge[i] - core[i]) * t) for i in range(3))
-        d.ellipse([c - rr, c - rr, c + rr, c + rr], fill=col + (255,))
-    d.ellipse([c - disk, c - disk, c + disk, c + disk], outline=(206, 112, 24, 255),
-              width=max(SS, int(0.22 * r * SS)))             # tmavý jantarový lem pro kontrast i na světlém
+    tex = _sun_texture()
+    if tex is not None:
+        R = r * 1.15 * SS                                    # ortografická projekce fotosféry
+        szpx = sz * SS
+        yy, xx = np.mgrid[0:szpx, 0:szpx]
+        X = xx - c; Y = yy - c
+        disk = X * X + Y * Y <= R * R
+        nx = X / R; ny = Y / R
+        nz = np.sqrt(np.clip(1.0 - nx * nx - ny * ny, 0.0, 1.0))
+        th, tw = tex.shape[:2]
+        lat = np.degrees(np.arcsin(np.clip(-ny, -1.0, 1.0)))
+        lon = np.degrees(np.arctan2(nx, nz))
+        u = (((lon + 180.0) / 360.0 * tw).astype(np.int32)) % tw
+        v = np.clip(((90.0 - lat) / 180.0 * th).astype(np.int32), 0, th - 1)
+        col = tex[v, u].astype(np.float32)
+        col *= (nz ** 0.45)[..., None]                       # ztmavení okraje (limb darkening)
+        col = np.clip(col * 1.15 + 10.0, 0, 255)
+        arr = np.asarray(im).astype(np.uint8).copy()
+        rgb = col.astype(np.uint8)
+        arr[disk] = np.concatenate([rgb[disk], np.full((int(disk.sum()), 1), 255, np.uint8)], axis=1)
+        im = Image.fromarray(arr, "RGBA")
+        ImageDraw.Draw(im).ellipse([c - R, c - R, c + R, c + R],
+                                   outline=(180, 90, 20, 230), width=max(SS, int(0.10 * R)))
+    else:
+        d = ImageDraw.Draw(im)
+        disk = int(r * 1.15 * SS)                           # zlatý kotouč (plochá záloha)
+        core = (255, 250, 238); edge = (255, 176, 48)
+        for rr in range(disk, 0, -1):
+            t = rr / disk
+            colf = tuple(int(core[i] + (edge[i] - core[i]) * t) for i in range(3))
+            d.ellipse([c - rr, c - rr, c + rr, c + rr], fill=colf + (255,))
+        d.ellipse([c - disk, c - disk, c + disk, c + disk], outline=(206, 112, 24, 255),
+                  width=max(SS, int(0.22 * r * SS)))
     return im.resize((sz, sz), Image.LANCZOS), pad
 
 _MOONTEX = False    # False = nenačteno, None = není k dispozici, jinak np.float32 pole
