@@ -63,7 +63,7 @@ CITIES = {
 
 # --- ROZLIŠENÍ A OŘEZ -------------------------------------------------------
 SCREEN = None                  # None = auto-detekce rozlišení; jinak (šířka, výška), např. (2560, 1440)
-MAP_FILL = "cover"             # "cover" = přes celou plochu (ořízne kraje) | "contain" = celá mapa + okraje s hvězdami
+MAP_FILL = "contain"           # "cover" = přes celou plochu (ořízne kraje) | "contain" = celá mapa + okraje s hvězdami
 
 # --- ZAMYKACÍ / PŘIHLAŠOVACÍ OBRAZOVKA (Windows) ----------------------------
 SET_LOCKSCREEN = True          # nastavit render i jako zamykací (a tím i přihlašovací) obrazovku; vyžaduje admin práva
