@@ -6,5 +6,7 @@ services:
     image: penumbra-wallpaper
     # Namapujeme aktuální adresář, aby se vygenerovaný obrázek penumbra.png
     # a složka .cache uložily přímo k nám na hostitelský systém
+    environment:
+      - TZ=Europe/Prague
     volumes:
       - ./:/app

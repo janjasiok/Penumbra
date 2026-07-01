@@ -4,8 +4,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
-# 1. Spustíme Docker kontejner, který vygeneruje nový penumbra.png
-/usr/local/bin/docker-compose up
+# 1. Spustíme Docker kontejner pomocí 'docker run', čímž se vyhneme čtení souborů přes docker-compose
+/usr/local/bin/docker run --rm -v "$DIR":/app -e TZ=Europe/Prague penumbra-wallpaper
 
 # 2. MacOS si pamatuje cestu k tapetě. Pokud je cesta stejná, neobnoví ji,
 #    protože nepozná, že se obsah souboru změnil.
