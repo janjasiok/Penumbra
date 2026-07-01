@@ -856,8 +856,11 @@ def build_wallpaper(when=None):
               for k in range(-PATH_HOURS * 6, PATH_HOURS * 6 + 1)]
         _paths.append((sp, (255, 226, 150, 175), 1.8))            # Slunce – teplá
     if SHOW_MOON_PATH:
-        mp = [_moon_subpoint(now + datetime.timedelta(minutes=10 * k))
-              for k in range(-PATH_HOURS * 6, PATH_HOURS * 6 + 1)]
+        # lunární den ≈ 24 h 50 min (Měsíc obíhá) → vzorkujeme přes celý lunární den, ať se dráha uzavře jako u Slunce
+        half = 24.8412 * 60 / 2.0
+        n = PATH_HOURS * 12
+        mp = [_moon_subpoint(now + datetime.timedelta(minutes=-half + 2.0 * half * i / n))
+              for i in range(n + 1)]
         _paths.append((mp, (180, 200, 240, 170), 1.8))           # Měsíc – chladná
     if _paths:
         S = 3 if map_w <= 2600 else 2
