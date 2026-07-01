@@ -850,24 +850,28 @@ def build_wallpaper(when=None):
     md = ImageDraw.Draw(mapimg, "RGBA")
 
     # ---- dráhy Slunce a Měsíce (pozemní stopy subsolárního/sublunárního bodu) ----
+    # Každou dráhu vzorkujeme přes jeden „den" daného tělesa (Slunce 24 h, Měsíc ~24 h 50 min,
+    # protože Měsíc obíhá) a začínáme od okamžiku, kdy sub-bod protíná datovou hranici. Dráha pak
+    # začíná i končí na kraji mapy (uzavře se tam, historie naváže na budoucnost přes šev) a uvnitř
+    # mapy není žádný zlom ani nesmyslný můstek mezi minulostí a budoucností.
+    def _ground_track(subfn, day_min):
+        n = PATH_HOURS * 12
+        rc = lambda lo: ((lo - center + 180) % 360) - 180
+        t_seam, prevr, m = None, rc(subfn(now)[1]), 0.0
+        while m < day_min + 60:                                   # najdi nejbližší budoucí průchod přes šev
+            m += 10.0
+            r = rc(subfn(now + datetime.timedelta(minutes=m))[1])
+            if abs(r - prevr) > 180:
+                t_seam = m; break
+            prevr = r
+        start = (t_seam - day_min) if t_seam is not None else -day_min / 2.0   # okno [šev−den, šev] obsahuje „teď"
+        return [subfn(now + datetime.timedelta(minutes=start + day_min * i / n)) for i in range(n)]
+
     _paths = []
     if SHOW_SUN_PATH:
-        sp = [subsolar(now + datetime.timedelta(minutes=10 * k))
-              for k in range(-PATH_HOURS * 6, PATH_HOURS * 6 + 1)]
-        _paths.append((sp, (255, 226, 150, 175), 1.8))            # Slunce – teplá
+        _paths.append((_ground_track(subsolar, 24.0 * 60), (255, 226, 150, 175), 1.8))    # Slunce – teplá
     if SHOW_MOON_PATH:
-        # lunární den ≈ 24 h 50 min (Měsíc obíhá) → vzorkujeme přes celý lunární den, ať se dráha uzavře jako u Slunce
-        half = 24.8412 * 60 / 2.0
-        n = PATH_HOURS * 12
-        mp = [_moon_subpoint(now + datetime.timedelta(minutes=-half + 2.0 * half * i / n))
-              for i in range(n)]                                  # n bodů = uzavřená smyčka (bez duplicitního konce)
-        # pootoč smyčku tak, aby zbytkový zlom padl na datovou hranici (kraj mapy) → v mapě není patrný
-        rc = lambda lo: ((lo - center + 180) % 360) - 180
-        for i in range(1, len(mp)):
-            if abs(rc(mp[i][1]) - rc(mp[i - 1][1])) > 180:
-                mp = mp[i:] + mp[:i]
-                break
-        _paths.append((mp, (180, 200, 240, 170), 1.8))           # Měsíc – chladná
+        _paths.append((_ground_track(_moon_subpoint, 24.8412 * 60), (180, 200, 240, 170), 1.8))  # Měsíc – chladná
     if _paths:
         S = 3 if map_w <= 2600 else 2
         pim = Image.new("RGBA", (map_w * S, map_h * S), (0, 0, 0, 0))
