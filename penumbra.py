@@ -1131,13 +1131,33 @@ def build_wallpaper(when=None):
     else:
         canvas = Image.new("RGB", (sw, sh), C_SPACE)
         if SHOW_STARS and (sw > map_w or sh > map_h):
-            sd = ImageDraw.Draw(canvas)
+            sd = ImageDraw.Draw(canvas, "RGBA")
             rng = np.random.default_rng(7)
-            nstar = (sw * sh) // 7000
+            nstar = (sw * sh) // 2600                     # hustší hvězdné pole
             xs = rng.integers(0, sw, nstar); ys = rng.integers(0, sh, nstar)
+            mags = rng.random(nstar) ** 3                 # většina slabých, pár jasných
+            tints = rng.random(nstar)
             for i in range(nstar):
-                v = int(120 + 120 * rng.random())
-                sd.point((int(xs[i]), int(ys[i])), fill=(v, v, min(255, v + 20)))
+                b = int(70 + 185 * mags[i])
+                t = tints[i]
+                if t < 0.20:   col = (b, int(b * 0.92), int(b * 0.78))   # teplá
+                elif t > 0.80: col = (int(b * 0.80), int(b * 0.90), b)   # chladná
+                else:          col = (b, b, b)
+                x, y = int(xs[i]), int(ys[i])
+                sd.point((x, y), fill=col + (255,))
+                if mags[i] > 0.85:                        # jasnější hvězdy: jemný křížek/záře
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        sd.point((x + dx, y + dy), fill=col + (110,))
+        # planeta se u horního a dolního okraje plynule rozplyne do vesmíru (krátký pruh jako vinětace)
+        band = int(VIGNETTE_SIZE * map_h)
+        if band > 0 and sh > map_h:
+            am = np.array(mapimg)
+            ramp = np.linspace(0.0, 1.0, band).astype(np.float32)
+            a = am[..., 3].astype(np.float32)
+            a[:band] *= ramp[:, None]
+            a[map_h - band:] *= ramp[::-1][:, None]
+            am[..., 3] = a.astype(np.uint8)
+            mapimg = Image.fromarray(am, "RGBA")
         canvas.paste(mapimg, ((sw - map_w) // 2, (sh - map_h) // 2), mapimg)
 
     # ---- lineární vinětace nahoře a dole ----
