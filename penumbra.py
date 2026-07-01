@@ -63,7 +63,7 @@ CITIES = {
 
 # --- ROZLIŠENÍ A OŘEZ -------------------------------------------------------
 SCREEN = None                  # None = auto-detekce rozlišení; jinak (šířka, výška), např. (2560, 1440)
-MAP_FILL = "cover"             # "cover" = přes celou plochu (ořízne kraje) | "contain" = celá mapa + okraje s hvězdami
+MAP_FILL = "contain"           # "cover" = přes celou plochu (ořízne kraje) | "contain" = celá mapa + okraje s hvězdami
 
 # --- ZAMYKACÍ / PŘIHLAŠOVACÍ OBRAZOVKA (Windows) ----------------------------
 SET_LOCKSCREEN = True          # nastavit render i jako zamykací (a tím i přihlašovací) obrazovku; vyžaduje admin práva
@@ -850,15 +850,28 @@ def build_wallpaper(when=None):
     md = ImageDraw.Draw(mapimg, "RGBA")
 
     # ---- dráhy Slunce a Měsíce (pozemní stopy subsolárního/sublunárního bodu) ----
+    # Každou dráhu vzorkujeme přes jeden „den" daného tělesa (Slunce 24 h, Měsíc ~24 h 50 min,
+    # protože Měsíc obíhá) a začínáme od okamžiku, kdy sub-bod protíná datovou hranici. Dráha pak
+    # začíná i končí na kraji mapy (uzavře se tam, historie naváže na budoucnost přes šev) a uvnitř
+    # mapy není žádný zlom ani nesmyslný můstek mezi minulostí a budoucností.
+    def _ground_track(subfn, day_min):
+        n = PATH_HOURS * 12
+        rc = lambda lo: ((lo - center + 180) % 360) - 180
+        t_seam, prevr, m = None, rc(subfn(now)[1]), 0.0
+        while m < day_min + 60:                                   # najdi nejbližší budoucí průchod přes šev
+            m += 10.0
+            r = rc(subfn(now + datetime.timedelta(minutes=m))[1])
+            if abs(r - prevr) > 180:
+                t_seam = m; break
+            prevr = r
+        start = (t_seam - day_min) if t_seam is not None else -day_min / 2.0   # okno [šev−den, šev] obsahuje „teď"
+        return [subfn(now + datetime.timedelta(minutes=start + day_min * i / n)) for i in range(n)]
+
     _paths = []
     if SHOW_SUN_PATH:
-        sp = [subsolar(now + datetime.timedelta(minutes=10 * k))
-              for k in range(-PATH_HOURS * 6, PATH_HOURS * 6 + 1)]
-        _paths.append((sp, (255, 226, 150, 175), 1.8))            # Slunce – teplá
+        _paths.append((_ground_track(subsolar, 24.0 * 60), (255, 226, 150, 175), 1.8))    # Slunce – teplá
     if SHOW_MOON_PATH:
-        mp = [_moon_subpoint(now + datetime.timedelta(minutes=10 * k))
-              for k in range(-PATH_HOURS * 6, PATH_HOURS * 6 + 1)]
-        _paths.append((mp, (180, 200, 240, 170), 1.8))           # Měsíc – chladná
+        _paths.append((_ground_track(_moon_subpoint, 24.8412 * 60), (180, 200, 240, 170), 1.8))  # Měsíc – chladná
     if _paths:
         S = 3 if map_w <= 2600 else 2
         pim = Image.new("RGBA", (map_w * S, map_h * S), (0, 0, 0, 0))
@@ -1131,13 +1144,33 @@ def build_wallpaper(when=None):
     else:
         canvas = Image.new("RGB", (sw, sh), C_SPACE)
         if SHOW_STARS and (sw > map_w or sh > map_h):
-            sd = ImageDraw.Draw(canvas)
+            sd = ImageDraw.Draw(canvas, "RGBA")
             rng = np.random.default_rng(7)
-            nstar = (sw * sh) // 7000
+            nstar = (sw * sh) // 2600                     # hustší hvězdné pole
             xs = rng.integers(0, sw, nstar); ys = rng.integers(0, sh, nstar)
+            mags = rng.random(nstar) ** 3                 # většina slabých, pár jasných
+            tints = rng.random(nstar)
             for i in range(nstar):
-                v = int(120 + 120 * rng.random())
-                sd.point((int(xs[i]), int(ys[i])), fill=(v, v, min(255, v + 20)))
+                b = int(70 + 185 * mags[i])
+                t = tints[i]
+                if t < 0.20:   col = (b, int(b * 0.92), int(b * 0.78))   # teplá
+                elif t > 0.80: col = (int(b * 0.80), int(b * 0.90), b)   # chladná
+                else:          col = (b, b, b)
+                x, y = int(xs[i]), int(ys[i])
+                sd.point((x, y), fill=col + (255,))
+                if mags[i] > 0.85:                        # jasnější hvězdy: jemný křížek/záře
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        sd.point((x + dx, y + dy), fill=col + (110,))
+        # planeta se u horního a dolního okraje plynule rozplyne do vesmíru (krátký pruh jako vinětace)
+        band = int(VIGNETTE_SIZE * map_h)
+        if band > 0 and sh > map_h:
+            am = np.array(mapimg)
+            ramp = np.linspace(0.0, 1.0, band).astype(np.float32)
+            a = am[..., 3].astype(np.float32)
+            a[:band] *= ramp[:, None]
+            a[map_h - band:] *= ramp[::-1][:, None]
+            am[..., 3] = a.astype(np.uint8)
+            mapimg = Image.fromarray(am, "RGBA")
         canvas.paste(mapimg, ((sw - map_w) // 2, (sh - map_h) // 2), mapimg)
 
     # ---- lineární vinětace nahoře a dole ----

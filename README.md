@@ -19,6 +19,7 @@ Vzhled laděný do palety NASA (písma Inter + DM Mono).
 - **Slunce a Měsíc se skutečným povrchem** — subsolární/sublunární bod, přerušované dráhy, fáze Měsíce
 - **Polární záře** na noční straně z modelu NOAA OVATION (volitelné)
 - **Družice** (ISS, Hubble, Tiangong) — pozemní stopa, terčík, výška a rychlost
+- **Dva režimy** (`MAP_FILL`) — mapa přes celou plochu, nebo celý pás planety na hvězdné obloze s okraji rozplývajícími se do vesmíru
 - Jemné **vržené stíny** pod popisky, dráhami i značkami; NASA paleta a fonty
 
 ## Instalace
