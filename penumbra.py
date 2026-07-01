@@ -860,7 +860,13 @@ def build_wallpaper(when=None):
         half = 24.8412 * 60 / 2.0
         n = PATH_HOURS * 12
         mp = [_moon_subpoint(now + datetime.timedelta(minutes=-half + 2.0 * half * i / n))
-              for i in range(n + 1)]
+              for i in range(n)]                                  # n bodů = uzavřená smyčka (bez duplicitního konce)
+        # pootoč smyčku tak, aby zbytkový zlom padl na datovou hranici (kraj mapy) → v mapě není patrný
+        rc = lambda lo: ((lo - center + 180) % 360) - 180
+        for i in range(1, len(mp)):
+            if abs(rc(mp[i][1]) - rc(mp[i - 1][1])) > 180:
+                mp = mp[i:] + mp[:i]
+                break
         _paths.append((mp, (180, 200, 240, 170), 1.8))           # Měsíc – chladná
     if _paths:
         S = 3 if map_w <= 2600 else 2
