@@ -114,6 +114,7 @@ SATELLITES = [
     ("ISS",      25544, (252, 61, 33)),    # NASA červená
     ("Hubble",   20580, (130, 205, 255)),  # světle modrá
     ("Tiangong", 48274, (255, 200, 70)),   # jantarová
+    ("Terra",    25994, (120, 220, 130)),  # zelená
 ]
 
 # --- DRÁHY SLUNCE A MĚSÍCE + MĚSÍC ------------------------------------------
