@@ -1098,9 +1098,9 @@ def build_wallpaper(when=None):
                 mapimg.alpha_composite(ret, (int(ix - pad), int(iy - pad)))
                 lines = [(label, isf, color + (255,))]            # název
                 if len(cur) > 3:
-                    lines.append(("%.1f km/s" % cur[3], aff, (225, 230, 240, 240)))    # rychlost
+                    lines.append(("R: %.1f km/s" % cur[3], aff, (225, 230, 240, 240)))   # rychlost
                 if len(cur) > 2:
-                    lines.append(("%.0f km" % cur[2], aff, (225, 230, 240, 240)))      # výška
+                    lines.append(("V: %.0f km" % cur[2], aff, (225, 230, 240, 240)))     # výška
                 wlab = max(md.textbbox((0, 0), t, font=f)[2] for t, f, _ in lines)
                 rlim = ((map_w + sw) // 2) if cover else map_w    # viditelný pravý/levý okraj
                 llim = ((map_w - sw) // 2) if cover else 0
